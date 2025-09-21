@@ -1,11 +1,8 @@
-const nodemailer = require("nodemailer");
-// const fs = require('fs');
-// const path = require('path');
-require("dotenv").config();
-const { createEmailTemplate, createConfirmationTemplate } = require("./templateEmail");
+import nodemailer from "nodemailer";
+import { createEmailTemplate, createConfirmationTemplate } from "./templateEmail.js";
 
 // Configurazione Nodemailer
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransporter({
     service: "gmail",
     auth: {
         user: process.env.EMAIL_USER,
@@ -13,14 +10,30 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Verifica configurazione email all'avvio
-// transporter.verify((error, success) => {
-//     if (error) console.log('❌ Errore configurazione email:', error);
+// Funzione principale per Vercel (DEVE essere export default)
+export default async function handler(req, res) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-//     else console.log('✅ Server email pronto per inviare messaggi');
-// });
+    try {
+        const result = await handleContactForm(req.body);
+        
+        if (result.success) {
+            res.status(200).json(result);
+        } else {
+            res.status(400).json(result);
+        }
+    } catch (error) {
+        console.error('Errore nella funzione Vercel:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Errore del server' 
+        });
+    }
+}
 
-// Funzione principale per gestire il form
+// Funzione per gestire il form (ora NON export default)
 async function handleContactForm(formData) {
     const { nome, email, messaggio } = formData;
     
@@ -33,17 +46,12 @@ async function handleContactForm(formData) {
                 message: validation.error
             };
         }
-        // Log del messaggio ricevuto
-        console.log('📧 Nuovo messaggio da:', nome, '(' + email + ')');
         
-        // Salva messaggio 
-        // await saveMessage({ nome, email, messaggio });
+        // Log del messaggio ricevuto
+        console.log('Nuovo messaggio da:', nome, '(' + email + ')');
         
         // Invia email a te
         await sendEmailToYou({ nome, email, messaggio });
-        
-        // Invia conferma al mittente
-        // await sendConfirmationEmail({ nome, email });
         
         return {
             success: true,
@@ -51,15 +59,15 @@ async function handleContactForm(formData) {
         };
         
     } catch (error) {
-        console.error('❌ Errore nel processare il form:', error);
+        console.error('Errore nel processare il form:', error);
         return {
             success: false,
             message: 'Errore del server. Riprova più tardi.'
         };
-    };
-};
+    }
+}
 
-// Validazione dati form
+// Validazione dati form (ora function normale)
 function validateFormData({ nome, email, messaggio }) {
     if (!nome || !email || !messaggio) {
         return {
@@ -91,42 +99,22 @@ function validateFormData({ nome, email, messaggio }) {
     }
     
     return { isValid: true };
-};
+}
 
-// Invia email a te
+// Invia email a te (ora function normale)
 async function sendEmailToYou({ nome, email, messaggio }) {
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: process.env.YOUR_EMAIL,
-        subject: `💼 Nuovo messaggio dal Portfolio - ${nome}`,
+        to: process.env.YOUR_EMAIL, // Assicurati di aver aggiunto questa variabile in Vercel
+        subject: `Nuovo messaggio dal Portfolio - ${nome}`,
         html: createEmailTemplate({ nome, email, messaggio })
     };
     
     try {
         await transporter.sendMail(mailOptions);
-        console.log('✅ Email inviata alla tua casella');
+        console.log('Email inviata alla tua casella');
     } catch (error) {
-        console.error('❌ Errore invio email:', error);
+        console.error('Errore invio email:', error);
         throw error;
     }
-};
-
-// Invia email di conferma al mittente
-// async function sendConfirmationEmail({ nome, email }) {
-//     const mailOptions = {
-//         from: process.env.EMAIL_USER,
-//         to: email,
-//         subject: '✅ Messaggio ricevuto - Matteo Portfolio',
-//         html: createConfirmationTemplate(nome)
-//     };
-    
-//     try {
-//         await transporter.sendMail(mailOptions);
-//         console.log('✅ Email di conferma inviata a:', email);
-//     } catch (error) {
-//         console.error('❌ Errore invio conferma:', error);
-//         // Non bloccare il processo per questo errore
-//     }
-//};
-
-module.exports = {handleContactForm};
+}

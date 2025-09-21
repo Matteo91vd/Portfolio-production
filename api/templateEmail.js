@@ -1,6 +1,5 @@
 // Template email principale
-function createEmailTemplate({ nome, email, messaggio }) {
-    
+export function createEmailTemplate({ nome, email, messaggio }) {
     return `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
@@ -35,7 +34,7 @@ function createEmailTemplate({ nome, email, messaggio }) {
 }
 
 // Template email di conferma
-function createConfirmationTemplate(nome) {
+export function createConfirmationTemplate(nome) {
     return `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #28a745;">✅ Messaggio Ricevuto!</h2>
@@ -69,6 +68,4 @@ function createConfirmationTemplate(nome) {
             </p>
         </div>
     `;
-};
-
-module.exports = { createEmailTemplate, createConfirmationTemplate };
+}
