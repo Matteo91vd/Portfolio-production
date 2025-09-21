@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const errorMessage = document.querySelector("span.message-form-error");
 
         try {
-            const response = await fetch("api/v1/contact", {  
+            const response = await fetch("api/contact", {  
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
